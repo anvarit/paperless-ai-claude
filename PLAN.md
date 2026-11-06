@@ -102,6 +102,7 @@ No authentication: bind to a LAN address or put it behind your reverse proxy's a
 | `OPENAI_API_KEY` | required with `openai` | API key for the OpenAI-compatible endpoint; local servers accept any dummy string |
 | `OPENAI_BASE_URL` | empty | base URL of the OpenAI-compatible endpoint; empty = `https://api.openai.com/v1` |
 | `MODEL` | `claude-sonnet-5-5` | any Claude model; `claude-haiku-5-5` for the cheapest option. With `LLM_PROVIDER=openai`: the provider's model id |
+| `FALLBACK_MODEL` | empty | optional stronger model (e.g. `claude-fable-5-1`, same provider). A document the primary model marks unreadable or errors on is retried there at once; documents already tagged `ai-failed` are picked up by the loop and retried there once, then left alone |
 | `PROCESSED_TAG` / `REDO_TAG` / `FAILED_TAG` | `ai-processed` / `ai-redo` / `ai-failed` | workflow tags, created on first run, never offered to the model |
 | `EXCLUDE_TAGS` | empty | comma-separated tags never offered to the model nor changed (inbox tags, folder tags) |
 | `ALLOW_NEW_TAGS` | `false` | let the model create tags |

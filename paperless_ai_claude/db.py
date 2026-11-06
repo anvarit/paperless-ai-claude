@@ -67,6 +67,10 @@ class DB:
         with self._conn() as c:
             return c.execute("SELECT COUNT(*) FROM runs WHERE doc_id=? AND status='failed' AND dry_run=0", (doc_id,)).fetchone()[0]
 
+    def tried(self, doc_id, model):
+        with self._conn() as c:
+            return c.execute("SELECT 1 FROM runs WHERE doc_id=? AND model=? AND dry_run=0 LIMIT 1", (doc_id, model)).fetchone() is not None
+
     def stats(self):
         with self._conn() as c:
             today = datetime.now(timezone.utc).date().isoformat()

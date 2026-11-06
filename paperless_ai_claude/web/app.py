@@ -30,10 +30,11 @@ def create_app(cfg, pl, db, worker):
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request):
         try:
-            queue = worker.queue_count()
+            meta = worker.load_meta()
+            queue, failed = worker.queue_count(meta), worker.failed_count(meta)
         except Exception as e:
-            queue = f"error: {e}"
-        return templates.TemplateResponse(request, "index.html", ctx(request, runs=db.recent(50), stats=db.stats(), queue=queue,
+            queue, failed = f"error: {e}", "?"
+        return templates.TemplateResponse(request, "index.html", ctx(request, runs=db.recent(50), stats=db.stats(), queue=queue, failed=failed,
                                                                      running=worker.lock.locked(), last_run=worker.last_run))
 
     @app.post("/run")
@@ -105,10 +106,11 @@ def create_app(cfg, pl, db, worker):
     @app.get("/api/status")
     def status():
         try:
-            queue = worker.queue_count()
-        except Exception as e:
-            queue = None
+            meta = worker.load_meta()
+            queue, failed = worker.queue_count(meta), worker.failed_count(meta)
+        except Exception:
+            queue = failed = None
         s = db.stats()
-        return JSONResponse({"version": __version__, "queue": queue, "running": worker.lock.locked(), "last_run": worker.last_run, **s})
+        return JSONResponse({"version": __version__, "queue": queue, "failed": failed, "running": worker.lock.locked(), "last_run": worker.last_run, **s})
 
     return app

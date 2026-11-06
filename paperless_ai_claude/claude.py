@@ -81,8 +81,9 @@ class Claude:
         return resp.parsed_output, usage
 
 
-def make_client(cfg):
+def make_client(cfg, model=None):
+    model = model or cfg.model
     if cfg.llm_provider == "openai":
         from .openai_compat import OpenAICompat
-        return OpenAICompat(cfg.openai_api_key, cfg.model, cfg.openai_base_url)
-    return Claude(cfg.anthropic_api_key, cfg.model)
+        return OpenAICompat(cfg.openai_api_key, model, cfg.openai_base_url)
+    return Claude(cfg.anthropic_api_key, model)

@@ -8,6 +8,7 @@ in the browser. A replacement for the unmaintained [paperless-ai](https://github
 - Claude API with structured outputs and prompt caching; any Anthropic API key. Any OpenAI-compatible API works too (untested, see below).
 - Keeps your tag vocabulary clean: existing tags first, creation opt-in, cleanup tools included.
 - State lives in Paperless tags; no extra database to migrate.
+- Optional `FALLBACK_MODEL`: documents the primary model cannot read (or that error out) are retried once on a stronger model; already `ai-failed` documents get the same single retry.
 
 Status: design complete ([PLAN.md](PLAN.md)), build not started.
 

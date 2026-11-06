@@ -141,6 +141,50 @@ def test_queue_since_limits_the_loop_but_not_backfill():
         assert [d["id"] for d in w.queue(w.load_meta(), extra={"added__date__lt": "2026-10-01"})] == [101]
 
 
+
+def test_fallback_model_escalates_unreadable_and_errors():
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg, pl, db, w = make(tmp, result=dict(RESULT, readable=False, title="Unreadable scan"), FALLBACK_MODEL="claude-fable-5-1")
+        good = FakeClaude(RESULT)
+        w.fallback = good
+        run = w.process(100)
+        assert run["status"] == "ok" and len(good.calls) == 1, run
+        assert run["after"]["title"].startswith("Invoice: Proximus")
+        assert any(n.startswith("escalated to claude-fable-5-1 (unreadable)") for n in run["notes"]), run["notes"]
+        # primary error -> fallback answers, no failure recorded
+        w.claude = FakeClaude(error=RuntimeError("boom"))
+        pl.docs[100]["tags"] = [4]
+        run = w.process(100)
+        assert run["status"] == "ok" and len(good.calls) == 2
+        assert any("escalated to claude-fable-5-1 (RuntimeError: boom)" in n for n in run["notes"])
+        # fallback itself fails -> normal failure handling
+        w.fallback = FakeClaude(error=RuntimeError("fallback down"))
+        run = w.process(100)
+        assert run["status"] == "failed" and "fallback down" in run["error"]
+    os.environ.pop("FALLBACK_MODEL")
+
+
+def test_failed_documents_retried_once_on_fallback():
+    with tempfile.TemporaryDirectory() as tmp:
+        tags = TAGS + [{"id": 6, "name": "ai-failed"}]
+        failed_doc = dict(DOC, id=103, tags=[6], added="2026-10-01T10:00:00+01:00")
+        os.environ.update({"PAPERLESS_URL": "http://x", "PAPERLESS_TOKEN": "t", "ANTHROPIC_API_KEY": "k", "DATA_DIR": tmp, "AMOUNT_FIELD": "Amount", "FALLBACK_MODEL": "claude-fable-5-1"})
+        cfg = Config(); pl = FakePaperless([failed_doc], tags, CORR, TYPES, CF); db = DB(cfg.db_path)
+        primary, fallback = FakeClaude(error=RuntimeError("should not be called")), FakeClaude(dict(RESULT, readable=False))
+        w = Worker(cfg, pl, db, primary, fallback)
+        assert [d["id"] for d in w.queue(w.load_meta())] == [103] and w.failed_count() == 1
+        run = w.process(103)                     # straight to the fallback model; still unreadable -> processed, failed tag removed, nothing else touched
+        assert run["status"] == "ok" and run["model"] == "claude-fable-5-1" and primary.calls == [] and len(fallback.calls) == 1
+        assert set(pl.docs[103]["tags"]) == {1} and pl.docs[103]["title"] == DOC["title"]
+        # a failed document that stays failed is not retried again
+        pl.docs[103]["tags"] = [6]
+        assert w.queue(w.load_meta()) == [] and db.tried(103, "claude-fable-5-1")
+        # without FALLBACK_MODEL the failed document is never queued
+        os.environ.pop("FALLBACK_MODEL")
+        w2 = Worker(Config(), pl, db, primary)
+        assert w2.queue(w2.load_meta()) == [] and w2.fallback is None
+
+
 if __name__ == "__main__":
     for n, f in list(globals().items()):
         if n.startswith("test_"):

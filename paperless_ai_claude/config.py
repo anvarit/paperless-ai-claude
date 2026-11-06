@@ -22,6 +22,7 @@ class Config:
     openai_api_key: str = field(default_factory=lambda: os.environ.get("OPENAI_API_KEY", ""))
     openai_base_url: str = field(default_factory=lambda: os.environ.get("OPENAI_BASE_URL", ""))
     model: str = field(default_factory=lambda: os.environ.get("MODEL", "claude-sonnet-5-5"))
+    fallback_model: str = field(default_factory=lambda: os.environ.get("FALLBACK_MODEL", ""))
     processed_tag: str = field(default_factory=lambda: os.environ.get("PROCESSED_TAG", "ai-processed"))
     redo_tag: str = field(default_factory=lambda: os.environ.get("REDO_TAG", "ai-redo"))
     failed_tag: str = field(default_factory=lambda: os.environ.get("FAILED_TAG", "ai-failed"))
