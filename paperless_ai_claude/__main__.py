@@ -17,7 +17,7 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("serve", help="web UI + periodic worker")
     r = sub.add_parser("run", help="process the queue once, or one document"); r.add_argument("--doc", type=int); r.add_argument("--limit", type=int); r.add_argument("--dry-run", action="store_true")
-    b = sub.add_parser("backfill", help="process older documents in batches"); b.add_argument("--before", help="added before YYYY-MM-DD"); b.add_argument("--limit", type=int, default=100); b.add_argument("--dry-run", action="store_true"); b.add_argument("--csv", help="write results to this CSV")
+    b = sub.add_parser("backfill", help="process older documents in batches"); b.add_argument("--before", help="added before YYYY-MM-DD (default: QUEUE_SINCE)"); b.add_argument("--limit", type=int, default=100); b.add_argument("--dry-run", action="store_true"); b.add_argument("--csv", help="write results to this CSV")
     sub.add_parser("backup", help="snapshot all document metadata")
     s = sub.add_parser("restore"); s.add_argument("--from", dest="src", required=True); s.add_argument("--doc", type=int)
     sub.add_parser("status")
@@ -39,7 +39,7 @@ def main(argv=None):
             print(w.run_batch(a.limit, a.dry_run))
         return
     if a.cmd == "backfill":
-        extra = {"added__date__lt": a.before} if a.before else {}
+        extra = {"added__date__lt": a.before or cfg.queue_since or "2999-12-31"}
         if not a.dry_run:
             print("backup:", snapshot(pl, cfg.backup_dir, "backfill"))
         res = w.run_batch(a.limit, a.dry_run, extra); print(res)

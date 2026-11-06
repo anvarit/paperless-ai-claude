@@ -109,6 +109,7 @@ No authentication: bind to a LAN address or put it behind your reverse proxy's a
 | `AMOUNT_FIELD` | empty | name of a float custom field to fill for invoices/receipts; empty = off |
 | `TAG_CASE` | `lower` | `lower`, `keep` |
 | `MAX_TAGS` | `5` | |
+| `QUEUE_SINCE` | empty | the periodic loop only takes documents added after this date (YYYY-MM-DD); older ones are left for `backfill` |
 | `BATCH_SIZE` | `20` | documents per run |
 | `INTERVAL_MIN` | `10` | worker interval; `0` = run once and exit (cron mode) |
 | `MAX_CONTENT_CHARS` | `20000` | |

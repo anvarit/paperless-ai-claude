@@ -36,6 +36,8 @@ class FakePaperless:
                 continue
             if "added__date__lt" in params and d["added"][:10] >= params["added__date__lt"]:
                 continue
+            if "added__date__gt" in params and d["added"][:10] <= params["added__date__gt"]:
+                continue
             yield copy.deepcopy(d)
 
     def count(self, path, params=None):

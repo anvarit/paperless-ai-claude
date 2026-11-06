@@ -42,6 +42,8 @@ class Worker:
         none = [str(i) for i in (processed, failed) if i]
         if none:
             params["tags__id__none"] = ",".join(none)
+        if self.cfg.queue_since and not extra:          # the periodic loop only takes recent documents; backfill passes its own window
+            params["added__date__gt"] = self.cfg.queue_since
         params.update(extra or {})
         for d in self.pl.documents(params):
             if d["id"] not in seen:
@@ -57,6 +59,8 @@ class Worker:
         none = [str(i) for i in (processed, failed) if i]
         if none:
             params["tags__id__none"] = ",".join(none)
+        if self.cfg.queue_since:
+            params["added__date__gt"] = self.cfg.queue_since
         return self.pl.count("/api/documents/", params)
 
     # --- one document ---------------------------------------------------------

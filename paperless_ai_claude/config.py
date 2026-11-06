@@ -33,6 +33,7 @@ class Config:
     amount_field: str = field(default_factory=lambda: os.environ.get("AMOUNT_FIELD", ""))
     tag_case: str = field(default_factory=lambda: os.environ.get("TAG_CASE", "lower"))
     max_tags: int = field(default_factory=lambda: int(os.environ.get("MAX_TAGS", "5")))
+    queue_since: str = field(default_factory=lambda: os.environ.get("QUEUE_SINCE", ""))
     batch_size: int = field(default_factory=lambda: int(os.environ.get("BATCH_SIZE", "20")))
     interval_min: int = field(default_factory=lambda: int(os.environ.get("INTERVAL_MIN", "10")))
     max_content_chars: int = field(default_factory=lambda: int(os.environ.get("MAX_CONTENT_CHARS", "20000")))

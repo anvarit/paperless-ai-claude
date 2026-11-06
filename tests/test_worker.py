@@ -136,3 +136,11 @@ def test_unreadable_leaves_metadata_alone():
         run = w.process(100)
         (doc_id, patch), = pl.patches
         assert list(patch) == ["tags"] and set(patch["tags"]) == {4, 1} and "unreadable" in run["notes"][0]
+
+
+def test_queue_since_limits_the_loop_but_not_backfill():
+    with tempfile.TemporaryDirectory() as tmp:
+        old = dict(DOC, id=101, added="2026-01-05T10:00:00+01:00")
+        cfg, pl, db, w = make(tmp, docs=[DOC, old], QUEUE_SINCE="2026-10-01")
+        assert [d["id"] for d in w.queue(w.load_meta())] == [100] and w.queue_count() == 1
+        assert [d["id"] for d in w.queue(w.load_meta(), extra={"added__date__lt": "2026-10-01"})] == [101]
