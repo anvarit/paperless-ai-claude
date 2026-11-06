@@ -124,11 +124,6 @@ def test_web_pages_render():
         assert "custom rules" in r.text and os.path.exists(cfg.prompt_path)
 
 
-if __name__ == "__main__":
-    for n, f in list(globals().items()):
-        if n.startswith("test_"):
-            f(); print("ok", n)
-
 
 def test_unreadable_leaves_metadata_alone():
     with tempfile.TemporaryDirectory() as tmp:
@@ -144,3 +139,9 @@ def test_queue_since_limits_the_loop_but_not_backfill():
         cfg, pl, db, w = make(tmp, docs=[DOC, old], QUEUE_SINCE="2026-10-01")
         assert [d["id"] for d in w.queue(w.load_meta())] == [100] and w.queue_count() == 1
         assert [d["id"] for d in w.queue(w.load_meta(), extra={"added__date__lt": "2026-10-01"})] == [101]
+
+
+if __name__ == "__main__":
+    for n, f in list(globals().items()):
+        if n.startswith("test_"):
+            f(); print("ok", n)
