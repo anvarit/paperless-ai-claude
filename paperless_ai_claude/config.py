@@ -17,7 +17,10 @@ class Config:
     paperless_url: str = field(default_factory=lambda: os.environ.get("PAPERLESS_URL", "").rstrip("/"))
     paperless_token: str = field(default_factory=lambda: os.environ.get("PAPERLESS_TOKEN", ""))
     paperless_public_url: str = field(default_factory=lambda: os.environ.get("PAPERLESS_PUBLIC_URL", "").rstrip("/"))
+    llm_provider: str = field(default_factory=lambda: os.environ.get("LLM_PROVIDER", "anthropic"))
     anthropic_api_key: str = field(default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY", ""))
+    openai_api_key: str = field(default_factory=lambda: os.environ.get("OPENAI_API_KEY", ""))
+    openai_base_url: str = field(default_factory=lambda: os.environ.get("OPENAI_BASE_URL", ""))
     model: str = field(default_factory=lambda: os.environ.get("MODEL", "claude-sonnet-5-5"))
     processed_tag: str = field(default_factory=lambda: os.environ.get("PROCESSED_TAG", "ai-processed"))
     redo_tag: str = field(default_factory=lambda: os.environ.get("REDO_TAG", "ai-redo"))
@@ -62,12 +65,15 @@ class Config:
         return {self.processed_tag, self.redo_tag, self.failed_tag}
 
     def check(self):
-        missing = [n for n, v in (("PAPERLESS_URL", self.paperless_url), ("PAPERLESS_TOKEN", self.paperless_token), ("ANTHROPIC_API_KEY", self.anthropic_api_key)) if not v]
+        keys = {"anthropic": ("ANTHROPIC_API_KEY", self.anthropic_api_key), "openai": ("OPENAI_API_KEY", self.openai_api_key)}
+        if self.llm_provider not in keys:
+            raise SystemExit(f"LLM_PROVIDER must be one of {', '.join(keys)}, not {self.llm_provider!r}")
+        missing = [n for n, v in (("PAPERLESS_URL", self.paperless_url), ("PAPERLESS_TOKEN", self.paperless_token), keys[self.llm_provider]) if not v]
         if missing:
             raise SystemExit("missing environment variables: " + ", ".join(missing))
 
     def public(self):
         d = self.__dict__.copy()
-        for k in ("paperless_token", "anthropic_api_key"):
+        for k in ("paperless_token", "anthropic_api_key", "openai_api_key"):
             d[k] = "***" if d[k] else ""
         return d

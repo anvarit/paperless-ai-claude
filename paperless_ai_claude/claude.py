@@ -79,3 +79,10 @@ class Claude:
                  "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0,
                  "model": resp.model, "duration_ms": int((time.time() - t0) * 1000)}
         return resp.parsed_output, usage
+
+
+def make_client(cfg):
+    if cfg.llm_provider == "openai":
+        from .openai_compat import OpenAICompat
+        return OpenAICompat(cfg.openai_api_key, cfg.model, cfg.openai_base_url)
+    return Claude(cfg.anthropic_api_key, cfg.model)

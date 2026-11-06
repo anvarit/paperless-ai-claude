@@ -97,8 +97,11 @@ No authentication: bind to a LAN address or put it behind your reverse proxy's a
 | `PAPERLESS_URL` | required | e.g. `http://paperless:8000` |
 | `PAPERLESS_PUBLIC_URL` | = `PAPERLESS_URL` | browser-reachable Paperless address for links in the UI |
 | `PAPERLESS_TOKEN` | required | API token of a dedicated Paperless user (view/change documents, add tags/correspondents/types/custom fields) |
-| `ANTHROPIC_API_KEY` | required | Claude API key (Max and Team plans include monthly API credits) |
-| `MODEL` | `claude-sonnet-5-5` | any Claude model; `claude-haiku-5-5` for the cheapest option |
+| `LLM_PROVIDER` | `anthropic` | `anthropic` or `openai` (any OpenAI-compatible endpoint; untested, see README) |
+| `ANTHROPIC_API_KEY` | required with `anthropic` | Claude API key (Max and Team plans include monthly API credits) |
+| `OPENAI_API_KEY` | required with `openai` | API key for the OpenAI-compatible endpoint; local servers accept any dummy string |
+| `OPENAI_BASE_URL` | empty | base URL of the OpenAI-compatible endpoint; empty = `https://api.openai.com/v1` |
+| `MODEL` | `claude-sonnet-5-5` | any Claude model; `claude-haiku-5-5` for the cheapest option. With `LLM_PROVIDER=openai`: the provider's model id |
 | `PROCESSED_TAG` / `REDO_TAG` / `FAILED_TAG` | `ai-processed` / `ai-redo` / `ai-failed` | workflow tags, created on first run, never offered to the model |
 | `EXCLUDE_TAGS` | empty | comma-separated tags never offered to the model nor changed (inbox tags, folder tags) |
 | `ALLOW_NEW_TAGS` | `false` | let the model create tags |

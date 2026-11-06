@@ -5,7 +5,7 @@ import threading
 import time
 import traceback
 
-from .claude import Claude, Refused, build_system, build_user, cut, load_prompt
+from .claude import Refused, make_client, build_system, build_user, cut, load_prompt
 from .resolver import resolve
 
 log = logging.getLogger("paperless-ai-claude")
@@ -14,7 +14,7 @@ log = logging.getLogger("paperless-ai-claude")
 class Worker:
     def __init__(self, cfg, pl, db, claude=None):
         self.cfg, self.pl, self.db = cfg, pl, db
-        self.claude = claude or Claude(cfg.anthropic_api_key, cfg.model)
+        self.claude = claude or make_client(cfg)
         self.lock = threading.Lock()
         self.last_run = None
         self.stop = threading.Event()
