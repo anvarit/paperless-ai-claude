@@ -43,3 +43,14 @@ def test_vocabulary_plan():
     assert next(m for m in merges if m["from_name"] == "Verzekering")["into"] == 2          # existing 'insurance' tag reused
     assert next(m for m in merges if m["from_name"] == "Belasting")["into"] is None        # 'tax' must be created
     assert [d["name"] for d in deletes] == ["Jenever"] and [r["name"] for r in review] == ["Gent"]
+
+def test_doctype_plan():
+    import re
+    from cleanup_doctypes import plan as dplan
+    vocab = [("invoice", [re.compile(r"invoice|factuur", re.I)]), ("-", [re.compile(r"unknown", re.I)])]
+    types = [dict(id=1, name="Invoice", document_count=740), dict(id=2, name="Factuur", document_count=309),
+             dict(id=3, name="Unknown", document_count=2), dict(id=4, name="Nota", document_count=0), dict(id=5, name="Verslag", document_count=7)]
+    merges, deletes, renames, review, members = dplan(types, vocab, 3)
+    assert [(m["from_name"], m["into"]) for m in merges] == [("Factuur", 1)]
+    assert [r["from"] for r in renames] == ["Invoice"] and renames[0]["to"] == "invoice"
+    assert sorted(d["name"] for d in deletes) == ["Nota", "Unknown"] and [r["name"] for r in review] == ["Verslag"]
