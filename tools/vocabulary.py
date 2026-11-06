@@ -5,7 +5,7 @@
 
 vocab.csv rows: target,pattern[,pattern...]  (patterns are case-insensitive regexes matched
 against the whole tag name; first matching row wins; a row with target only and pattern "^target$"
-keeps that tag as is). Tags matching no row are deleted when they have fewer than --delete-below
+keeps that tag as is; target "-" deletes the matching tags whatever their count). Tags matching no row are deleted when they have fewer than --delete-below
 documents, otherwise listed in DIR/review.csv for a human decision.
 
 Writes DIR/vocab-plan.json (merge/delete/rename steps for cleanup_tags.py apply) and
@@ -35,6 +35,9 @@ def plan(tags, vocab, exclude, delete_below):
         hit = next((target for target, pats in vocab if any(p.fullmatch(t["name"]) for p in pats)), None)
         if hit is None:
             (deletes if t["documents"] < delete_below else review).append(t)
+            continue
+        if hit == "-":          # explicit delete row (document-type synonyms, payment methods, places, people)
+            deletes.append(t)
             continue
         by_target[hit].append(t)
     for target, members in by_target.items():
