@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block body %}
+<h2>Effective settings <span class="muted">(environment; secrets masked)</span></h2>
+<table>{% for k, v in settings.items() %}<tr><th>{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}<tr><th>default prompt</th><td>{{ default_prompt }}</td></tr></table>
+{% endblock %}

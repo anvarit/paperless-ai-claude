@@ -1,0 +1,17 @@
+services:
+  paperless-ai-claude:
+    build: .
+    # image: ghcr.io/anvarit/paperless-ai-claude:latest   # once published
+    container_name: paperless-ai-claude
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8720:8720"
+    volumes:
+      - ./data:/data
+      # - /mnt/backup/paperless-ai-claude:/data/backups   # optional: keep snapshots off-box
+    # networks: [paperless]   # join your Paperless compose network to reach http://webserver:8000
+# networks:
+#   paperless:
+#     external: true
+#     name: paperless_default

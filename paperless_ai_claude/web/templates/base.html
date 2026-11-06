@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>paperless-ai-claude</title>
+<style>
+body{font:15px/1.45 system-ui,sans-serif;margin:0;background:#f6f7f9;color:#1f2328}header{background:#1f2328;color:#fff;padding:.6rem 1.2rem;display:flex;gap:1.2rem;align-items:center}
+header a{color:#fff;text-decoration:none}header a.b{font-weight:700}main{max-width:1100px;margin:1.2rem auto;padding:0 1rem}
+table{border-collapse:collapse;width:100%;background:#fff}th,td{padding:.4rem .6rem;border-bottom:1px solid #e3e6ea;text-align:left;vertical-align:top;font-size:14px}th{background:#eef0f3}
+.card{background:#fff;border:1px solid #e3e6ea;border-radius:6px;padding:.9rem 1rem;margin-bottom:1rem}.row{display:flex;gap:1rem;flex-wrap:wrap}.row>.card{flex:1 1 200px}
+.ok{color:#1a7f37}.failed{color:#cf222e}.dry{color:#9a6700}.muted{color:#6e7781}code,pre{background:#f0f2f5;padding:.1rem .3rem;border-radius:3px}pre{padding:.6rem;overflow:auto;white-space:pre-wrap}
+button,input[type=submit]{background:#1f6feb;color:#fff;border:0;border-radius:4px;padding:.35rem .8rem;cursor:pointer}button.sec{background:#6e7781}input[type=number],input[type=text]{padding:.3rem;border:1px solid #c9ced4;border-radius:4px}
+textarea{width:100%;min-height:28rem;font:13px/1.4 ui-monospace,monospace}.msg{background:#dafbe1;border:1px solid #1a7f37;padding:.5rem .8rem;border-radius:4px;margin-bottom:.8rem}
+form.inline{display:inline}
+</style></head><body>
+<header><a class="b" href="/">paperless-ai-claude</a><a href="/prompt">prompt</a><a href="/backups">backups</a><a href="/settings">settings</a><a href="/api/status">status.json</a><span class="muted" style="margin-left:auto">v{{ version }}</span></header>
+<main>{% for m in messages %}<div class="msg">{{ m }}</div>{% endfor %}{% block body %}{% endblock %}</main></body></html>

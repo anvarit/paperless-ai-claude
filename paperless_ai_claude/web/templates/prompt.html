@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block body %}
+<h2>Prompt {% if custom %}<span class="muted">(custom, stored in the data volume)</span>{% else %}<span class="muted">(shipped default)</span>{% endif %}</h2>
+<p class="muted">The existing tag, document-type and correspondent lists are appended automatically. Changes apply from the next run.</p>
+<form method="post" action="/prompt"><textarea name="text">{{ prompt }}</textarea><p><button>Save</button> <button name="reset" value="1" class="sec" onclick="return confirm('Reset to the shipped default prompt?')">Reset to default</button></p></form>
+{% endblock %}

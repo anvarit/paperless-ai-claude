@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block body %}
+<h2>Metadata backups <span class="muted">{{ cfg.backup_dir }}</span></h2>
+<form method="post" action="/backups"><button>Snapshot all documents now</button></form>
+<table><tr><th>backup</th><th>documents</th><th>restore</th></tr>
+{% for b in backups %}<tr><td>{{ b.name }}</td><td>{{ b.documents }}</td><td><form method="post" action="/backups/restore" class="inline" onsubmit="return confirm('Restore metadata from {{ b.name }}? This overwrites current title, date, tags, correspondent, type and custom fields.')">
+<input type="hidden" name="name" value="{{ b.name }}"><input type="number" name="doc_id" placeholder="only doc id (optional)" style="width:11rem"> <button class="sec">Restore</button></form></td></tr>{% endfor %}</table>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block body %}
+<div class="row">
+ <div class="card"><b>Queue</b><br><span style="font-size:1.6rem">{{ queue }}</span><br><span class="muted">documents without <code>{{ cfg.processed_tag }}</code></span></div>
+ <div class="card"><b>Today</b><br>{{ stats.today_ok }} ok · <span class="failed">{{ stats.today_failed }} failed</span> · <span class="dry">{{ stats.today_dry }} dry</span><br><span class="muted">{{ stats.today_tokens.input + stats.today_tokens.cache_read }} in / {{ stats.today_tokens.output }} out tokens</span></div>
+ <div class="card"><b>This month</b><br>{{ stats.month_tokens.input + stats.month_tokens.cache_read }} in / {{ stats.month_tokens.output }} out tokens<br><span class="muted">model {{ cfg.model }}</span></div>
+ <div class="card"><b>Worker</b><br>{% if running %}running{% else %}idle{% endif %} · every {{ cfg.interval_min }} min · batch {{ cfg.batch_size }}<br>
+  <form method="post" action="/run" class="inline"><input type="hidden" name="dry_run" value="0"><button>Run batch now</button></form>
+  <form method="post" action="/run" class="inline"><input type="hidden" name="dry_run" value="1"><input type="number" name="limit" value="5" min="1" style="width:4rem"> <button class="sec">Dry run</button></form></div>
+ <div class="card"><b>One document</b><form method="post" action="/documents/0/process" onsubmit="this.action='/documents/'+this.doc.value+'/process'">
+  <input type="number" name="doc" placeholder="Paperless id" required style="width:7rem"> <button name="dry_run" value="1" class="sec">Dry run</button> <button name="dry_run" value="0">Process</button></form></div>
+</div>
+<table><tr><th>run</th><th>when</th><th>doc</th><th>status</th><th>title after</th><th>tokens</th><th>notes</th></tr>
+{% for r in runs %}<tr><td><a href="/runs/{{ r.id }}">#{{ r.id }}</a></td><td class="muted">{{ r.started[:16].replace('T',' ') }}</td><td><a href="{{ cfg.paperless_url }}/documents/{{ r.doc_id }}/details" target="_blank">{{ r.doc_id }}</a></td>
+<td class="{{ r.status }}">{{ r.status }}</td><td>{{ (r.after or {}).get('title') or r.title or '' }}</td><td class="muted">{% if r.usage %}{{ r.usage.input + r.usage.cache_read }}/{{ r.usage.output }}{% endif %}</td>
+<td class="muted">{% if r.error %}{{ r.error.split('\n')[0][:80] }}{% elif r.notes %}{{ r.notes|join('; ') }}{% endif %}</td></tr>{% endfor %}</table>
+{% endblock %}
