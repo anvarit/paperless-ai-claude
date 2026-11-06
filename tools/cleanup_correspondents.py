@@ -103,7 +103,7 @@ def cmd_apply(pl, admin, a):
     redo = os.environ.get("REDO_TAG", "ai-redo")
     redo_id = next((t["id"] for t in pl.all("/api/tags/", {"name__iexact": redo, "fields": "id,name"}) if t["name"].casefold() == redo.casefold()), None)
     if p["reset"] and redo_id is None:
-        sys.exit(f"redo tag {redo!r} not found")
+        redo_id = pl.req("POST", "/api/tags/", {"name": redo, "matching_algorithm": 0, "owner": None})["id"]; print(f"created tag {redo!r}")
     for m in p["merge"]:
         ids = docs_of(pl, m["from"]); bulk(pl, ids, "set_correspondent", correspondent=m["into"])
         admin.req("DELETE", f"/api/correspondents/{m['from']}/"); print(f"merged {m['from_name']!r} -> {m['into_name']!r} ({len(ids)} docs)")
