@@ -5,7 +5,7 @@ import threading
 import time
 import traceback
 
-from .claude import Refused, make_client, build_system, build_user, cut, load_prompt
+from .claude import Refused, Unavailable, make_client, build_system, build_user, cut, load_prompt
 from .resolver import resolve
 
 log = logging.getLogger("paperless-ai-claude")
@@ -18,6 +18,7 @@ class Worker:
         self.fallback = fallback or (make_client(cfg, cfg.fallback_model) if cfg.fallback_model else None)
         self.lock = threading.Lock()
         self.last_run = None
+        self.paused = None            # last Unavailable message; cleared by the next successful call
         self.stop = threading.Event()
 
     # --- metadata cache (refreshed per batch) -------------------------------
@@ -113,6 +114,12 @@ class Worker:
                     self.pl.update_document(doc_id, patch)
                 self.db.finish(run_id, "ok", before=before, after=after, output=result.model_dump(), usage=usage, notes=notes)
             self._log("ok" if not dry_run else "dry", doc_id, title=after.get("title"), usage=usage, changed=sorted(patch))
+            self.paused = None
+        except Unavailable as e:                      # API-side problem: record, do not blame the document, stop the batch
+            self.db.finish(run_id, "skipped", before=before, error=str(e))
+            self.paused = str(e)
+            self._log("unavailable", doc_id, error=str(e))
+            raise
         except Refused as e:
             self._mark_failed(doc, meta, str(e), dry_run, force=True)
             self.db.finish(run_id, "failed", before=before, error=str(e))
@@ -132,6 +139,8 @@ class Worker:
             if result.readable or client is not self.claude or not self.fallback:
                 return result, usage, []
             reason = "unreadable"
+        except Unavailable:
+            raise
         except Exception as e:
             if client is not self.claude or not self.fallback:
                 raise
@@ -162,7 +171,14 @@ class Worker:
         try:
             meta = self.load_meta()
             docs = self.queue(meta, limit or self.cfg.batch_size, extra)
-            results = [self.process(d["id"], dry_run, meta) for d in docs]
+            results = []
+            for d in docs:
+                try:
+                    results.append(self.process(d["id"], dry_run, meta))
+                except Unavailable as e:
+                    self.last_run = time.time()
+                    return {"processed": len(results), "ok": sum(1 for r in results if r["status"] in ("ok", "dry")),
+                            "failed": sum(1 for r in results if r["status"] == "failed"), "paused": str(e)}
             self.last_run = time.time()
             return {"processed": len(results), "ok": sum(1 for r in results if r["status"] in ("ok", "dry")),
                     "failed": sum(1 for r in results if r["status"] == "failed")}
@@ -176,7 +192,7 @@ class Worker:
                 self._log("batch", 0, **res)
             except Exception as e:
                 log.error("batch failed: %s", e)
-            self.stop.wait(self.cfg.interval_min * 60)
+            self.stop.wait(max(self.cfg.interval_min, 30 if self.paused else 0) * 60)   # back off while the API is unavailable
 
     def _log(self, event, doc_id, **kw):
         if self.cfg.log_format == "json":

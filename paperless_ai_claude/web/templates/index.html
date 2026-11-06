@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% block body %}
 <div class="row">
- <div class="card"><b>Queue</b><br><span style="font-size:1.6rem">{{ queue }}</span><br><span class="muted">documents without <code>{{ cfg.processed_tag }}</code></span></div>
+ <div class="card"><b>Queue</b><br><span style="font-size:1.6rem">{{ queue }}</span><br><span class="muted">documents without <code>{{ cfg.processed_tag }}</code></span>{% if paused %}<br><span class="failed">API unavailable: {{ paused }}</span>{% endif %}</div>
  <div class="card"><b>Failed</b><br><span style="font-size:1.6rem" class="{{ 'failed' if failed else '' }}">{{ failed }}</span><br><span class="muted">tagged <code>{{ cfg.failed_tag }}</code>{% if cfg.fallback_model %} · retried once on {{ cfg.fallback_model }}{% endif %}</span></div>
  <div class="card"><b>Today</b><br>{{ stats.today_ok }} ok · <span class="failed">{{ stats.today_failed }} failed</span> · <span class="dry">{{ stats.today_dry }} dry</span><br><span class="muted">{{ stats.today_tokens.input + stats.today_tokens.cache_read }} in / {{ stats.today_tokens.output }} out tokens</span></div>
  <div class="card"><b>This month</b><br>{{ stats.month_tokens.input + stats.month_tokens.cache_read }} in / {{ stats.month_tokens.output }} out tokens<br><span class="muted">model {{ cfg.model }}</span></div>

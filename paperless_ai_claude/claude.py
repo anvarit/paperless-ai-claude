@@ -25,6 +25,16 @@ class Refused(RuntimeError):
     pass
 
 
+class Unavailable(RuntimeError):
+    """The API cannot serve any document right now (auth, spend limit, rate limit, outage): not the document's fault."""
+
+
+def unavailable(e):
+    msg = str(e).lower()
+    return isinstance(e, (anthropic.AuthenticationError, anthropic.PermissionDeniedError, anthropic.RateLimitError, anthropic.InternalServerError, anthropic.APIConnectionError)) \
+        or (isinstance(e, anthropic.BadRequestError) and ("usage limit" in msg or "credit balance" in msg))
+
+
 def load_prompt(path):
     for p in (path, DEFAULT_PROMPT):
         if p and os.path.exists(p):
@@ -65,11 +75,16 @@ class Claude:
 
     def classify(self, system, user_text):
         t0 = time.time()
-        resp = self.client.messages.parse(
-            model=self.model, max_tokens=2048, system=system,
-            messages=[{"role": "user", "content": user_text}],
-            output_format=Classification,
-        )
+        try:
+            resp = self.client.messages.parse(
+                model=self.model, max_tokens=2048, system=system,
+                messages=[{"role": "user", "content": user_text}],
+                output_format=Classification,
+            )
+        except anthropic.APIError as e:
+            if unavailable(e):
+                raise Unavailable(str(e).split("\n")[0][:300]) from None
+            raise
         if resp.stop_reason == "refusal":
             cat = getattr(getattr(resp, "stop_details", None), "category", None)
             raise Refused(f"refused ({cat})")

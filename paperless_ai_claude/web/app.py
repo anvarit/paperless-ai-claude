@@ -34,7 +34,7 @@ def create_app(cfg, pl, db, worker):
             queue, failed = worker.queue_count(meta), worker.failed_count(meta)
         except Exception as e:
             queue, failed = f"error: {e}", "?"
-        return templates.TemplateResponse(request, "index.html", ctx(request, runs=db.recent(50), stats=db.stats(), queue=queue, failed=failed,
+        return templates.TemplateResponse(request, "index.html", ctx(request, runs=db.recent(50), stats=db.stats(), queue=queue, failed=failed, paused=worker.paused,
                                                                      running=worker.lock.locked(), last_run=worker.last_run))
 
     @app.post("/run")
@@ -111,6 +111,6 @@ def create_app(cfg, pl, db, worker):
         except Exception:
             queue = failed = None
         s = db.stats()
-        return JSONResponse({"version": __version__, "queue": queue, "failed": failed, "running": worker.lock.locked(), "last_run": worker.last_run, **s})
+        return JSONResponse({"version": __version__, "queue": queue, "failed": failed, "running": worker.lock.locked(), "last_run": worker.last_run, "paused": worker.paused, **s})
 
     return app

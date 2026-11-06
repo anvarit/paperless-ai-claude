@@ -3,7 +3,7 @@ import time
 
 import openai
 
-from .claude import Classification, Refused
+from .claude import Classification, Refused, Unavailable
 
 
 class OpenAICompat:
@@ -15,11 +15,14 @@ class OpenAICompat:
         if not isinstance(system, str):                      # Anthropic block list from build_system -> plain text
             system = "\n".join(b["text"] for b in system)
         t0 = time.time()
-        resp = self.client.chat.completions.parse(
-            model=self.model, max_completion_tokens=2048,
-            messages=[{"role": "system", "content": system}, {"role": "user", "content": user_text}],
-            response_format=Classification,
-        )
+        try:
+            resp = self.client.chat.completions.parse(
+                model=self.model, max_completion_tokens=2048,
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user_text}],
+                response_format=Classification,
+            )
+        except (openai.AuthenticationError, openai.PermissionDeniedError, openai.RateLimitError, openai.InternalServerError, openai.APIConnectionError) as e:
+            raise Unavailable(str(e).split("\n")[0][:300]) from None
         msg = resp.choices[0].message
         if msg.refusal:
             raise Refused(f"refused ({msg.refusal})")

@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from paperless_ai_claude.config import Config
 from paperless_ai_claude.db import DB
 from paperless_ai_claude.worker import Worker
-from paperless_ai_claude.claude import Refused
+from paperless_ai_claude.claude import Refused, Unavailable
 from fakes import FakePaperless, FakeClaude
 
 TAGS = [{"id": 1, "name": "ai-processed"}, {"id": 2, "name": "insurance"}, {"id": 3, "name": "business"}, {"id": 4, "name": "Inbox", "is_inbox_tag": True}, {"id": 5, "name": "ai-redo"}]
@@ -183,6 +183,18 @@ def test_failed_documents_retried_once_on_fallback():
         os.environ.pop("FALLBACK_MODEL")
         w2 = Worker(Config(), pl, db, primary)
         assert w2.queue(w2.load_meta()) == [] and w2.fallback is None
+
+
+def test_unavailable_api_skips_without_blaming_the_document():
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg, pl, db, w = make(tmp, error=Unavailable("You have reached your specified API usage limits."), MAX_FAILURES="1")
+        res = w.run_batch()
+        assert res["processed"] == 0 and "usage limits" in res["paused"], res
+        assert db.recent(1)[0]["status"] == "skipped" and db.failures(100) == 0
+        assert pl.patches == [] and w.paused                       # no ai-failed tag, loop will back off
+        w.claude = FakeClaude(RESULT)
+        assert w.run_batch() == {"processed": 1, "ok": 1, "failed": 0} and w.paused is None
+    os.environ.pop("MAX_FAILURES")
 
 
 if __name__ == "__main__":
