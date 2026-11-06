@@ -89,7 +89,7 @@ def test_tag_match_case_insensitive():
     cfg = _cfg()
     tags = [{"id": 1, "name": "Workplace-Safety"}]
     res = _result(tags=["workplace-safety"])
-    patch, notes = resolve(cfg, _doc(tags=[1]), res, tags, [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[1]), res, tags, [], [], [], creator)
     assert 1 in patch.get("tags", [])
 
 
@@ -97,7 +97,7 @@ def test_tag_match_punctuation_insensitive():
     cfg = _cfg()
     tags = [{"id": 1, "name": "Workplace-Safety"}]
     res = _result(tags=["Workplace Safety"])
-    patch, notes = resolve(cfg, _doc(tags=[1]), res, tags, [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[1]), res, tags, [], [], [], creator)
     assert 1 in patch.get("tags", [])
 
 
@@ -108,7 +108,7 @@ def test_tag_match_punctuation_insensitive():
 def test_unmatched_tag_dropped_when_no_new_tags():
     cfg = _cfg(ALLOW_NEW_TAGS=False)
     res = _result(tags=["Unknown"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, [], [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[]), res, [], [], [], [], creator)
     assert "Unknown" not in [t for t in patch.get("tags", [])]
     assert any("dropped" in n for n in notes)
 
@@ -116,7 +116,7 @@ def test_unmatched_tag_dropped_when_no_new_tags():
 def test_unmatched_tag_created_when_allow_new():
     cfg = _cfg(allow_new_tags=True)
     res = _result(tags=["Unknown"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, [], [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[]), res, [], [], [], [], creator)
     assert 999 in patch.get("tags", [])
     assert any("created" in n for n in notes)
 
@@ -130,7 +130,7 @@ def test_reserved_tag_not_added():
     cfg = _cfg()
     tags = [{"id": 1, "name": "ai-processed"}]
     res = _result(tags=["ai-processed"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], creator)
     assert 1 not in patch.get("tags", [])
     assert any("reserved" in n for n in notes)
 
@@ -142,7 +142,7 @@ def test_redo_tag_removed_from_document():
     tags = [{"id": 1, "name": "Invoice"}, {"id": redo_id, "name": "ai-redo"}]
     res = _result(tags=[])
     patch, notes = resolve(
-        cfg, _doc(tags=[1, redo_id]), res, tags, [], [], [], [], creator)
+        cfg, _doc(tags=[1, redo_id]), res, tags, [], [], [], creator)
     assert redo_id not in patch.get("tags", [])
 
 
@@ -151,7 +151,7 @@ def test_exclude_tag_not_added():
     cfg = _cfg(EXCLUDE_TAGS="spam")
     tags = [{"id": 1, "name": "spam"}]
     res = _result(tags=["spam"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], creator)
     assert 1 not in patch.get("tags", [])
 
 
@@ -160,7 +160,7 @@ def test_inbox_tag_not_added():
     cfg = _cfg()
     tags = [{"id": 1, "name": "Inbox", "is_inbox_tag": True}]
     res = _result(tags=["Inbox"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], creator)
     assert 1 not in patch.get("tags", [])
 
 
@@ -172,7 +172,7 @@ def test_max_tags_limit():
     cfg = _cfg(MAX_TAGS=2)
     tags = [{"id": 1, "name": "A"}, {"id": 2, "name": "B"}, {"id": 3, "name": "C"}]
     res = _result(tags=["A", "B", "C"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], [], creator)
+    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], creator)
     tag_count = len([t for t in patch.get("tags", []) if t not in (1, 2, 3)])
     assert tag_count <= 2  # Only up to max_tags new tags
 
@@ -186,7 +186,7 @@ def test_correspondent_kept_when_existing():
     res = _result(correspondent="Other")
     patch, notes = resolve(
         cfg, _doc(correspondent=50), res, [],
-        [{"id": 50, "name": "A"}], [], [], [], creator)
+        [{"id": 50, "name": "A"}], [], [], creator)
     assert "correspondent" not in patch
 
 
@@ -195,7 +195,7 @@ def test_correspondent_set_when_none():
     res = _result(correspondent="NewCo")
     patch, notes = resolve(
         cfg, _doc(correspondent=None), res, [],
-        [], [], [], [], creator)
+        [], [], [], creator)
     assert patch.get("correspondent") == 999
 
 
@@ -208,7 +208,7 @@ def test_document_type_case_insensitive():
     types = [{"id": 1, "name": "Invoice"}]
     res = _result(document_type="INVOICE")
     patch, notes = resolve(
-        cfg, _doc(document_type=None), res, [], [], types, [], [], creator)
+        cfg, _doc(document_type=None), res, [], [], types, [], creator)
     assert patch.get("document_type") == 1
 
 
@@ -217,7 +217,7 @@ def test_document_type_lowercased_when_tag_case_lower():
     types = [{"id": 1, "name": "Invoice"}]
     res = _result(document_type="INVOICE")
     patch, notes = resolve(
-        cfg, _doc(document_type=None), res, [], [], types, [], [], creator)
+        cfg, _doc(document_type=None), res, [], [], types, [], creator)
     assert patch.get("document_type") == 1
 
 
@@ -229,7 +229,7 @@ def test_title_set_when_overwrite_and_different():
     cfg = _cfg(overwrite_title=True)
     res = _result(title="New Title")
     patch, notes = resolve(
-        cfg, _doc(title="Old"), res, [], [], [], [], [], creator)
+        cfg, _doc(title="Old"), res, [], [], [], [], creator)
     assert patch.get("title") == "New Title"
 
 
@@ -237,7 +237,7 @@ def test_title_not_set_when_not_overwrite():
     cfg = _cfg(overwrite_title=False)
     res = _result(title="New Title")
     patch, notes = resolve(
-        cfg, _doc(title="Old"), res, [], [], [], [], [], creator)
+        cfg, _doc(title="Old"), res, [], [], [], [], creator)
     assert "title" not in patch
 
 
@@ -250,7 +250,7 @@ def test_date_set_when_created_equals_added():
     res = _result(document_date="2024-05-01")
     patch, notes = resolve(
         cfg, _doc(created_date="2024-05-01", added="2024-05-01"),
-        res, [], [], [], [], [], creator)
+        res, [], [], [], [], creator)
     assert patch.get("created") == "2024-05-01"
 
 
@@ -259,7 +259,7 @@ def test_date_not_set_when_different_and_no_overwrite():
     res = _result(document_date="2024-05-01")
     patch, notes = resolve(
         cfg, _doc(created_date="2023-01-01", added="2023-01-01"),
-        res, [], [], [], [], [], creator)
+        res, [], [], [], [], creator)
     assert "created" not in patch
 
 
@@ -268,7 +268,7 @@ def test_invalid_date_ignored():
     res = _result(document_date="2026-13-40")
     patch, notes = resolve(
         cfg, _doc(created_date="2024-05-01", added="2024-05-01"),
-        res, [], [], [], [], [], creator)
+        res, [], [], [], [], creator)
     assert "created" not in patch
 
 

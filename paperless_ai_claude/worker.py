@@ -68,7 +68,7 @@ class Worker:
         try:
             content = (doc.get("content") or "").strip()
             if len(content) < 20:
-                self._mark_failed(doc, meta, "no text", dry_run)
+                self._mark_failed(doc, meta, "no text", dry_run, force=True)   # retrying will not add text
                 self.db.finish(run_id, "failed", before=before, error="no text (empty OCR)")
                 return self.db.run(run_id)
             rules = load_prompt(self.cfg.prompt_path)
