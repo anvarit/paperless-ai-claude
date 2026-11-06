@@ -114,7 +114,7 @@ def test_unmatched_tag_dropped_when_no_new_tags():
 
 
 def test_unmatched_tag_created_when_allow_new():
-    cfg = _cfg(allow_new_tags=True)
+    cfg = _cfg(ALLOW_NEW_TAGS="true")
     res = _result(tags=["Unknown"])
     patch, notes = resolve(cfg, _doc(tags=[]), res, [], [], [], [], creator)
     assert 999 in patch.get("tags", [])
@@ -127,12 +127,12 @@ def test_unmatched_tag_created_when_allow_new():
 
 def test_reserved_tag_not_added():
     """Excluded tags (processed/redo/failed/exclude/inbox) are never added."""
-    cfg = _cfg()
-    tags = [{"id": 1, "name": "ai-processed"}]
-    res = _result(tags=["ai-processed"])
-    patch, notes = resolve(cfg, _doc(tags=[]), res, tags, [], [], [], creator)
-    assert 1 not in patch.get("tags", [])
-    assert any("reserved" in n for n in notes)
+    cfg = _cfg(EXCLUDE_TAGS="Email")
+    tags = [{"id": 1, "name": "ai-processed"}, {"id": 2, "name": "Email"}, {"id": 3, "name": "ai-redo"}, {"id": 4, "name": "Inbox", "is_inbox_tag": True}]
+    res = _result(tags=["Email", "ai-redo", "Inbox"])
+    patch, notes = resolve(cfg, _doc(tags=[3]), res, tags, [], [], [], creator)
+    assert patch.get("tags") == [1]                      # only the processed marker; redo removed, reserved never added
+    assert sum("reserved" in n for n in notes) == 3
 
 
 def test_redo_tag_removed_from_document():
@@ -234,7 +234,7 @@ def test_title_set_when_overwrite_and_different():
 
 
 def test_title_not_set_when_not_overwrite():
-    cfg = _cfg(overwrite_title=False)
+    cfg = _cfg(OVERWRITE_TITLE="false")
     res = _result(title="New Title")
     patch, notes = resolve(
         cfg, _doc(title="Old"), res, [], [], [], [], creator)
@@ -247,18 +247,18 @@ def test_title_not_set_when_not_overwrite():
 
 def test_date_set_when_created_equals_added():
     cfg = _cfg()
-    res = _result(document_date="2024-05-01")
+    res = _result(document_date="2024-04-30")
     patch, notes = resolve(
-        cfg, _doc(created_date="2024-05-01", added="2024-05-01"),
+        cfg, _doc(created_date="2024-05-01", added="2024-05-01"),   # created == added: Paperless had no real date
         res, [], [], [], [], creator)
-    assert patch.get("created") == "2024-05-01"
+    assert patch.get("created") == "2024-04-30"
 
 
 def test_date_not_set_when_different_and_no_overwrite():
     cfg = _cfg()
     res = _result(document_date="2024-05-01")
     patch, notes = resolve(
-        cfg, _doc(created_date="2023-01-01", added="2023-01-01"),
+        cfg, _doc(created_date="2023-01-01", added="2023-02-01"),   # Paperless already has a real date
         res, [], [], [], [], creator)
     assert "created" not in patch
 
