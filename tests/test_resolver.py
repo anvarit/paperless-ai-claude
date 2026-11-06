@@ -289,7 +289,7 @@ def test_amount_not_written_when_field_empty():
     cfg = _cfg(AMOUNT_FIELD="")
     res = _result(amount=100.0)
     patch, notes = resolve(
-        cfg, _doc(custom_fields=[]), res, [], [], [], [], [], creator)
+        cfg, _doc(custom_fields=[]), res, [], [], [], [], creator)
     assert "custom_fields" not in patch
 
 
