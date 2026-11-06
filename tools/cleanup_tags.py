@@ -30,7 +30,8 @@ AMOUNT = re.compile(r"^(amount|bedrag|montant|total|totaal)?[:=\s]*[€$£]?\s*\
 
 
 def normalise(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", name.casefold()).strip()
+    n = re.sub(r"[^a-z0-9]+", " ", name.casefold()).strip()
+    return n or name.casefold().strip()   # non-Latin names keep their own identity
 
 
 def classify(tags, exclude):
@@ -100,6 +101,12 @@ class Paperless:
             self.req("POST", "/api/documents/bulk_edit/", {"documents": doc_ids[i:i + 500], "method": "modify_tags",
                                                             "parameters": {"add_tags": add, "remove_tags": remove}})
 
+    def get_or_create_tag(self, name):
+        for t in self.all("/api/tags/", {"name__iexact": name, "fields": "id,name"}):
+            if t["name"].casefold() == name.casefold():
+                return t
+        return self.req("POST", "/api/tags/", {"name": name, "matching_algorithm": 0})
+
     def rename_tag(self, tag_id, name):
         self.req("PATCH", f"/api/tags/{tag_id}/", {"name": name})
 
@@ -144,11 +151,16 @@ def backup(pl, backup_dir, tag_ids, reason):
 
 def apply(pl, plan_path, backup_dir, exclude):
     plan = json.load(open(plan_path))
-    touched = [x["id"] for x in plan["delete"]] + [x["from"] for x in plan["merge"]] + [x["into"] for x in plan["merge"]]
+    touched = [x["id"] for x in plan["delete"]] + [x["from"] for x in plan["merge"]] + [x["into"] for x in plan["merge"] if x.get("into")]
     backup(pl, backup_dir, touched, "tag-cleanup")
+    created = {}
     for m in plan["merge"]:
         if m["from_name"] in exclude:
             continue
+        if m.get("into") is None:
+            if m["into_name"] not in created:
+                created[m["into_name"]] = pl.get_or_create_tag(m["into_name"])["id"]
+            m["into"] = created[m["into_name"]]
         ids = pl.doc_ids_with_tag(m["from"])
         if ids:
             pl.modify_tags(ids, add=[m["into"]], remove=[m["from"]])

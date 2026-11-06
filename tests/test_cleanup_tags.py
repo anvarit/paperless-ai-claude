@@ -25,3 +25,21 @@ def test_classify():
 
 if __name__ == "__main__":
     test_classify(); print("ok")
+
+def test_non_latin_not_grouped():
+    tags = [t(1, "ホテル", 1), t(2, "請求書", 1), t(3, "Hotel", 10)]
+    res = {tag["name"]: cls for tag, cls, _ in classify(tags, set())}
+    assert res["ホテル"] == "keep" and res["請求書"] == "keep"
+
+def test_vocabulary_plan():
+    from vocabulary import plan as vplan
+    import re
+    vocab = [("insurance", [re.compile(r"verzekering(en)?|insurance", re.I)]), ("tax", [re.compile(r"belasting(en)?|tax", re.I)])]
+    tags = [dict(id=1, name="Verzekering", documents=163, **{"class": "keep"}), dict(id=2, name="insurance", documents=59, **{"class": "keep"}),
+            dict(id=3, name="Belasting", documents=114, **{"class": "keep"}), dict(id=4, name="Jenever", documents=1, **{"class": "keep"}),
+            dict(id=5, name="Gent", documents=20, **{"class": "keep"})]
+    merges, deletes, renames, review, by_target = vplan(tags, vocab, set(), 3)
+    assert {m["from_name"] for m in merges} == {"Verzekering", "Belasting"}
+    assert next(m for m in merges if m["from_name"] == "Verzekering")["into"] == 2          # existing 'insurance' tag reused
+    assert next(m for m in merges if m["from_name"] == "Belasting")["into"] is None        # 'tax' must be created
+    assert [d["name"] for d in deletes] == ["Jenever"] and [r["name"] for r in review] == ["Gent"]
