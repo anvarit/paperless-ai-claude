@@ -10,7 +10,7 @@
   <input type="number" name="doc" placeholder="Paperless id" required style="width:7rem"> <button name="dry_run" value="1" class="sec">Dry run</button> <button name="dry_run" value="0">Process</button></form></div>
 </div>
 <table><tr><th>run</th><th>when</th><th>doc</th><th>status</th><th>title after</th><th>tokens</th><th>notes</th></tr>
-{% for r in runs %}<tr><td><a href="/runs/{{ r.id }}">#{{ r.id }}</a></td><td class="muted">{{ r.started[:16].replace('T',' ') }}</td><td><a href="{{ cfg.paperless_url }}/documents/{{ r.doc_id }}/details" target="_blank">{{ r.doc_id }}</a></td>
+{% for r in runs %}<tr><td><a href="/runs/{{ r.id }}">#{{ r.id }}</a></td><td class="muted">{{ r.started[:16].replace('T',' ') }}</td><td><a href="{{ cfg.paperless_public_url }}/documents/{{ r.doc_id }}/details" target="_blank">{{ r.doc_id }}</a></td>
 <td class="{{ r.status }}">{{ r.status }}</td><td>{{ (r.after or {}).get('title') or r.title or '' }}</td><td class="muted">{% if r.usage %}{{ r.usage.input + r.usage.cache_read }}/{{ r.usage.output }}{% endif %}</td>
 <td class="muted">{% if r.error %}{{ r.error.split('\n')[0][:80] }}{% elif r.notes %}{{ r.notes|join('; ') }}{% endif %}</td></tr>{% endfor %}</table>
 {% endblock %}

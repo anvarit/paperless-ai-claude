@@ -16,6 +16,7 @@ def _list(name, default=""):
 class Config:
     paperless_url: str = field(default_factory=lambda: os.environ.get("PAPERLESS_URL", "").rstrip("/"))
     paperless_token: str = field(default_factory=lambda: os.environ.get("PAPERLESS_TOKEN", ""))
+    paperless_public_url: str = field(default_factory=lambda: os.environ.get("PAPERLESS_PUBLIC_URL", "").rstrip("/"))
     anthropic_api_key: str = field(default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY", ""))
     model: str = field(default_factory=lambda: os.environ.get("MODEL", "claude-sonnet-5-5"))
     processed_tag: str = field(default_factory=lambda: os.environ.get("PROCESSED_TAG", "ai-processed"))
@@ -42,6 +43,8 @@ class Config:
     log_format: str = field(default_factory=lambda: os.environ.get("LOG_FORMAT", "json"))
 
     def __post_init__(self):
+        if not self.paperless_public_url:
+            self.paperless_public_url = self.paperless_url
         if not self.backup_dir:
             self.backup_dir = os.path.join(self.data_dir, "backups")
 

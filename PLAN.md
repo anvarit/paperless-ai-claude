@@ -95,6 +95,7 @@ No authentication: bind to a LAN address or put it behind your reverse proxy's a
 | Variable | Default | Meaning |
 |---|---|---|
 | `PAPERLESS_URL` | required | e.g. `http://paperless:8000` |
+| `PAPERLESS_PUBLIC_URL` | = `PAPERLESS_URL` | browser-reachable Paperless address for links in the UI |
 | `PAPERLESS_TOKEN` | required | API token of a dedicated Paperless user (view/change documents, add tags/correspondents/types/custom fields) |
 | `ANTHROPIC_API_KEY` | required | Claude API key (Max and Team plans include monthly API credits) |
 | `MODEL` | `claude-sonnet-5-5` | any Claude model; `claude-haiku-5-5` for the cheapest option |

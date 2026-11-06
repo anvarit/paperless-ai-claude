@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% block body %}
 {% macro show(v, kind) %}{% if kind == 'tags' %}{% for t in v or [] %}<code>{{ names.tags.get(t, t) if names else t }}</code> {% endfor %}{% elif kind in ('correspondents','types') %}{{ (names[kind].get(v, v) if names and v is not none else v) }}{% elif kind == 'custom_fields' %}{% for f in v or [] %}<code>{{ names.custom_fields.get(f.field, f.field) if names else f.field }}={{ f.value }}</code> {% endfor %}{% else %}{{ v }}{% endif %}{% endmacro %}
-<h2>Run #{{ run.id }} · document <a href="{{ cfg.paperless_url }}/documents/{{ run.doc_id }}/details" target="_blank">{{ run.doc_id }}</a> · <span class="{{ run.status }}">{{ run.status }}</span>{% if run.dry_run %} (dry run){% endif %}</h2>
+<h2>Run #{{ run.id }} · document <a href="{{ cfg.paperless_public_url }}/documents/{{ run.doc_id }}/details" target="_blank">{{ run.doc_id }}</a> · <span class="{{ run.status }}">{{ run.status }}</span>{% if run.dry_run %} (dry run){% endif %}</h2>
 <p class="muted">{{ run.started }} → {{ run.finished }} · {{ run.model }}{% if run.usage %} · {{ run.usage.input }} in + {{ run.usage.cache_read }} cached / {{ run.usage.output }} out · {{ run.usage.duration_ms }} ms{% endif %}
  <form method="post" action="/documents/{{ run.doc_id }}/process" class="inline"><button name="dry_run" value="1" class="sec">Dry run again</button> <button name="dry_run" value="0">Process (live)</button></form></p>
 {% if run.error %}<div class="card failed"><pre>{{ run.error }}</pre></div>{% endif %}
