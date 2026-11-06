@@ -43,6 +43,7 @@ def _doc(**extra):
 
 def _result(**extra):
     return type("Result", (), {
+        "readable": extra.get("readable", True),
         "correspondent": extra.get("correspondent"),
         "document_type": extra.get("document_type"),
         "title": extra.get("title"),

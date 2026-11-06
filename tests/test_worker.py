@@ -13,7 +13,7 @@ TYPES = [{"id": 20, "name": "invoice"}, {"id": 21, "name": "letter"}]
 CF = [{"id": 1, "name": "Amount", "data_type": "float"}]
 DOC = {"id": 100, "title": "scan_0001.pdf", "content": "PROXIMUS NV factuur 2026-0098123 datum 12/10/2026 totaal 79,00 EUR " * 3,
        "created_date": "2026-11-01", "added": "2026-11-01T10:00:00+01:00", "tags": [4], "correspondent": None, "document_type": None, "custom_fields": []}
-RESULT = {"title": "Invoice: Proximus 12-10-2026 (2026-0098123)", "correspondent": "proximus", "document_type": "Invoice",
+RESULT = {"readable": True, "title": "Invoice: Proximus 12-10-2026 (2026-0098123)", "correspondent": "proximus", "document_type": "Invoice",
           "tags": ["insurance", "telecom", "Business"], "document_date": "2026-10-12", "language": "nl", "amount": 79.0}
 
 
@@ -128,3 +128,11 @@ if __name__ == "__main__":
     for n, f in list(globals().items()):
         if n.startswith("test_"):
             f(); print("ok", n)
+
+
+def test_unreadable_leaves_metadata_alone():
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg, pl, db, w = make(tmp, result=dict(RESULT, readable=False, title="Unreadable scan"))
+        run = w.process(100)
+        (doc_id, patch), = pl.patches
+        assert list(patch) == ["tags"] and set(patch["tags"]) == {4, 1} and "unreadable" in run["notes"][0]

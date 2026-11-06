@@ -63,5 +63,5 @@ class FakeClaude:
         self.calls.append((system, user_text))
         if self.error:
             raise self.error
-        r = self.result if isinstance(self.result, Classification) else Classification(**self.result)
+        r = self.result if isinstance(self.result, Classification) else Classification(**{"readable": True, **self.result})
         return r, {"input": 1200, "output": 90, "cache_read": 4000, "cache_write": 0, "model": "fake", "duration_ms": 5}

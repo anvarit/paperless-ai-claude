@@ -28,12 +28,15 @@ class Index:
 def resolve(cfg, doc, result, tags, correspondents, types, custom_fields, creator):
     """Return (patch, notes). creator(kind, name) creates an object and returns it; only called when allowed."""
     patch, notes = {}, []
+    unreadable = getattr(result, "readable", True) is False
+    if unreadable:
+        notes.append("unreadable scan: metadata left unchanged")
     # --- tags
     tag_idx = Index(tags)
     excluded = set(cfg.exclude_tags) | cfg.workflow_tags | {t["name"] for t in tags if t.get("is_inbox_tag")}
     keep = set(doc.get("tags") or [])
     new_ids = []
-    for name in (result.tags or [])[: cfg.max_tags]:
+    for name in ([] if unreadable else (result.tags or []))[: cfg.max_tags]:
         name = name.strip()
         if not name:
             continue
@@ -58,6 +61,8 @@ def resolve(cfg, doc, result, tags, correspondents, types, custom_fields, creato
     final = (keep | set(new_ids) | {processed["id"]}) - {t["id"] for t in (redo, failed) if t}
     if final != keep:
         patch["tags"] = sorted(final)
+    if unreadable:
+        return patch, notes
     # --- correspondent
     if result.correspondent and (doc.get("correspondent") is None or cfg.overwrite_correspondent):
         idx = Index(correspondents)

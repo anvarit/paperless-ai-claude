@@ -103,15 +103,16 @@ class Worker:
             self._log("refused", doc_id, error=str(e))
         except Exception as e:
             err = f"{type(e).__name__}: {e}"
+            prior = self.db.failures(doc_id)
             self.db.finish(run_id, "failed", before=before, error=err + "\n" + traceback.format_exc()[-1500:])
-            self._mark_failed(doc, meta, err, dry_run)
+            self._mark_failed(doc, meta, err, dry_run, prior_failures=prior)
             self._log("failed", doc_id, error=err)
         return self.db.run(run_id)
 
-    def _mark_failed(self, doc, meta, reason, dry_run, force=False):
+    def _mark_failed(self, doc, meta, reason, dry_run, force=False, prior_failures=0):
         if dry_run:
             return
-        if not force and self.db.failures(doc["id"]) + 1 < self.cfg.max_failures:
+        if not force and prior_failures + 1 < self.cfg.max_failures:
             return
         failed = self._tag_id(meta, self.cfg.failed_tag)
         if failed is None:

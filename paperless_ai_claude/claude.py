@@ -11,6 +11,7 @@ DEFAULT_PROMPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__
 
 
 class Classification(BaseModel):
+    readable: bool = Field(description="false only when the text is garbage or empty and nothing about the document can be identified")
     title: str = Field(description="Document title following the title rules")
     correspondent: Optional[str] = Field(description="Sender organisation or person, shortest usual name; null if unknown")
     document_type: Optional[str] = Field(description="One of the existing document types; null if none fits")
