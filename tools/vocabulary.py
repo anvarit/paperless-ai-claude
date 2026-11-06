@@ -29,10 +29,11 @@ def plan(tags, vocab, exclude, delete_below):
     merges, deletes, renames, review = [], [], [], []
     by_target = defaultdict(list)
     existing = {t["name"].casefold(): t for t in tags}
+    hits = {}
     for t in tags:
         if t["name"] in exclude or t["class"] in ("amount", "empty", "variant"):
             continue
-        hit = next((target for target, pats in vocab if any(p.fullmatch(t["name"]) for p in pats)), None)
+        hit = hits[t["id"]] = next((target for target, pats in vocab if any(p.fullmatch(t["name"]) for p in pats)), None)
         if hit is None:
             (deletes if t["documents"] < delete_below else review).append(t)
             continue
@@ -42,6 +43,8 @@ def plan(tags, vocab, exclude, delete_below):
         by_target[hit].append(t)
     for target, members in by_target.items():
         tgt = existing.get(target.casefold())
+        if tgt and hits.get(tgt["id"]) != target:   # same name, but mapped elsewhere (e.g. "Statement" -> bank statement)
+            tgt = None
         if tgt and tgt["name"] != target:
             renames.append({"id": tgt["id"], "from": tgt["name"], "to": target})
         for t in members:

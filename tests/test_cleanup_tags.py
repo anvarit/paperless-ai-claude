@@ -54,3 +54,13 @@ def test_doctype_plan():
     assert [(m["from_name"], m["into"]) for m in merges] == [("Factuur", 1)]
     assert [r["from"] for r in renames] == ["Invoice"] and renames[0]["to"] == "invoice"
     assert sorted(d["name"] for d in deletes) == ["Nota", "Unknown"] and [r["name"] for r in review] == ["Verslag"]
+
+def test_target_name_mapped_elsewhere():
+    import re
+    from cleanup_doctypes import plan as dplan
+    vocab = [("bank statement", [re.compile(r"bank statement|statement", re.I)]), ("statement", [re.compile(r"afrekening", re.I)])]
+    types = [dict(id=1, name="Statement", document_count=10), dict(id=2, name="Afrekening", document_count=6), dict(id=3, name="Bank Statement", document_count=12)]
+    merges, deletes, renames, review, members = dplan(types, vocab, 3)
+    stm = next(m for m in merges if m["from_name"] == "Afrekening")
+    assert stm["into"] is None and stm["into_name"] == "statement"      # not reusing 'Statement', which goes to bank statement
+    assert [r["from"] for r in renames] == ["Bank Statement"]
