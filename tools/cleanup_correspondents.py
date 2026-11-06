@@ -104,16 +104,23 @@ def cmd_apply(pl, admin, a):
     redo_id = next((t["id"] for t in pl.all("/api/tags/", {"name__iexact": redo, "fields": "id,name"}) if t["name"].casefold() == redo.casefold()), None)
     if p["reset"] and redo_id is None:
         redo_id = pl.req("POST", "/api/tags/", {"name": redo, "matching_algorithm": 0, "owner": None})["id"]; print(f"created tag {redo!r}")
+    cs = {c["id"]: c for c in pl.all("/api/correspondents/", {"fields": "id,name"})}   # resumable: skip steps already done
+    for x in p["delete"]:                                     # empty ones first: a rename target may already exist as an empty correspondent
+        if x["id"] in cs:
+            admin.req("DELETE", f"/api/correspondents/{x['id']}/")
     for m in p["merge"]:
+        if m["from"] not in cs:
+            continue
         ids = docs_of(pl, m["from"]); bulk(pl, ids, "set_correspondent", correspondent=m["into"])
         admin.req("DELETE", f"/api/correspondents/{m['from']}/"); print(f"merged {m['from_name']!r} -> {m['into_name']!r} ({len(ids)} docs)")
     for r in p["rename"]:
-        admin.req("PATCH", f"/api/correspondents/{r['id']}/", {"name": r["to"]}); print(f"renamed {r['from']!r} -> {r['to']!r}")
+        if r["id"] in cs and cs[r["id"]]["name"] != r["to"]:
+            admin.req("PATCH", f"/api/correspondents/{r['id']}/", {"name": r["to"]}); print(f"renamed {r['from']!r} -> {r['to']!r}")
     for r in p["reset"]:
+        if r["id"] not in cs:
+            continue
         ids = docs_of(pl, r["id"]); bulk(pl, ids, "set_correspondent", correspondent=None); bulk(pl, ids, "modify_tags", add_tags=[redo_id], remove_tags=[])
         admin.req("DELETE", f"/api/correspondents/{r['id']}/"); print(f"reset {r['name']!r} ({len(ids)} docs -> no correspondent, tagged {redo})")
-    for x in p["delete"]:
-        admin.req("DELETE", f"/api/correspondents/{x['id']}/")
     print(f'done: {len(p["merge"])} merges, {len(p["rename"])} renames, {len(p["reset"])} resets, {len(p["delete"])} deletes')
 
 
