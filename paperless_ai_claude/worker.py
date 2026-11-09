@@ -59,15 +59,17 @@ class Worker:
         return out[:limit] if limit else out
 
     def queue_count(self, meta=None):
+        """What the next loop iteration will pick up: redo-tagged documents plus recent untouched ones."""
         meta = meta or self.load_meta()
-        processed, failed = (self._tag_id(meta, n) for n in (self.cfg.processed_tag, self.cfg.failed_tag))
+        processed, redo, failed = (self._tag_id(meta, n) for n in (self.cfg.processed_tag, self.cfg.redo_tag, self.cfg.failed_tag))
         params = {}
         none = [str(i) for i in (processed, failed) if i]
         if none:
             params["tags__id__none"] = ",".join(none)
         if self.cfg.queue_since:
             params["added__date__gt"] = self.cfg.queue_since
-        return self.pl.count("/api/documents/", params)
+        n = self.pl.count("/api/documents/", params)
+        return n + (self.pl.count("/api/documents/", {"tags__id__all": redo}) if redo else 0)
 
     def failed_count(self, meta=None):
         failed = self._tag_id(meta or self.load_meta(), self.cfg.failed_tag)

@@ -54,6 +54,7 @@ def test_queue_and_batch():
         cfg, pl, db, w = make(tmp, docs=[DOC, done, redo])
         ids = [d["id"] for d in w.queue(w.load_meta())]
         assert ids == [102, 100]                            # redo first, processed skipped
+        assert w.queue_count() == 2                         # the status card counts redo documents too
         res = w.run_batch()
         assert res == {"processed": 2, "ok": 2, "failed": 0}
         assert 5 not in pl.docs[102]["tags"] and 1 in pl.docs[102]["tags"]
