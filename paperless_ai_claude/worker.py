@@ -160,7 +160,7 @@ class Worker:
             obj = self.pl.create("tags", self.cfg.failed_tag)
             meta["tags"].append(obj)
             failed = obj["id"]
-        tags = set(doc.get("tags") or []) | {failed}
+        tags = (set(doc.get("tags") or []) | {failed}) - {self._tag_id(meta, self.cfg.redo_tag)}   # a failed redo is done: do not retry it every loop
         try:
             self.pl.update_document(doc["id"], {"tags": sorted(tags)})
         except Exception as e:

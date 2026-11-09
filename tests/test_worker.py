@@ -75,9 +75,11 @@ def test_empty_text_fails_and_tags_after_max_failures():
 
 def test_refusal_marks_failed_immediately():
     with tempfile.TemporaryDirectory() as tmp:
-        cfg, pl, db, w = make(tmp, error=Refused("refused (cyber)"))
+        cfg, pl, db, w = make(tmp, docs=[dict(DOC, tags=[4, 5])], error=Refused("refused (cyber)"))
         run = w.process(100)
         assert run["status"] == "failed" and "refused" in run["error"] and pl.patches
+        (_, patch), = pl.patches
+        assert 5 not in patch["tags"]                       # the redo tag comes off, or the loop would retry it forever
 
 
 def test_existing_correspondent_kept_unless_overwrite():
